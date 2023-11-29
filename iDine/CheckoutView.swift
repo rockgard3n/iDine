@@ -16,6 +16,17 @@ struct CheckoutView: View {
     @State private var addLoyaltyDetails = false
     @State private var loyaltyNumber = ""
     
+    let tipAmounts = [10, 15, 20, 25, 0]
+    @State private var tipAmount = 15
+    
+    @State private var showingPaymentAlert = false
+    
+    var totalPrice: String {
+        let total = Double(order.total)
+        let tipValue = total / 100 * Double(tipAmount)
+        return (total + tipValue).formatted(.currency(code: "USD"))
+    }
+    
     var body: some View {
         Form {
             Section {
@@ -24,15 +35,34 @@ struct CheckoutView: View {
                         Text($0)
                     }
                 }
-                Toggle("Add iDine loyalty card", isOn: $addLoyaltyDetails)
+                Toggle("Add iDine loyalty card", isOn: $addLoyaltyDetails.animation())
                 
                 if addLoyaltyDetails {
                     TextField("Enter your Idine ID", text: $loyaltyNumber)
                 }
             }
+            
+            Section ("Add a Tip?") {
+                Picker("percentage:", selection: $tipAmount) {
+                    ForEach(tipAmounts, id: \.self) {
+                        Text("\($0)%")
+                    }
+                }
+                .pickerStyle(.segmented)
+            }
+            Section("Total: \(totalPrice)") {
+                Button("Confirm order") {
+                    showingPaymentAlert.toggle()
+                }
+            }
         }
         .navigationTitle("Payment")
         .navigationBarTitleDisplayMode(.inline)
+        .alert("Order Confirmed", isPresented: $showingPaymentAlert) {
+            //add buttons here
+        } message: {
+            Text("Your total was \(totalPrice) - thank you!")
+        }
     }
 }
 
